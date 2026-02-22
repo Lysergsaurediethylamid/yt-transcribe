@@ -1,0 +1,5 @@
+yt-dlp
+openai
+av
+python-dotenv
+tqdm

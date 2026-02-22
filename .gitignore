@@ -1,0 +1,7 @@
+.env
+cookies.txt
+.DS_Store
+output/
+temp/
+__pycache__/
+*.pyc
