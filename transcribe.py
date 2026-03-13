@@ -13,7 +13,7 @@
 
 输入：
   配置文件路径：.env (OPENAI_API_KEY)
-  命令行参数：YouTube URL
+  交互式输入：YouTube URL（多个用、分隔）
 
 输出：
   数据文件路径：output/{视频标题}.txt
@@ -383,24 +383,19 @@ def cleanup(chunks: list[Path], audio: Path):
 
 # ======= 主流程 =======
 
-def main():
-    if len(sys.argv) < 2:
-        print("用法: python transcribe.py <YouTube URL>")
-        sys.exit(1)
-
-    url = sys.argv[1]
-
+def process_one(url: str):
+    """处理单个视频：下载 -> 分片 -> 转写 -> 保存。"""
     print(f"[1/3] 下载音频: {url}")
     audio_path, title = download_audio(url)
     size_mb = audio_path.stat().st_size / 1024 / 1024
     print(f"  标题: {title}")
     print(f"  大小: {size_mb:.1f} MB")
 
-    print(f"[2/3] 分片检查...")
+    print("[2/3] 分片检查...")
     chunks = split_audio(audio_path)
     print(f"  共 {len(chunks)} 片")
 
-    print(f"[3/3] 转写中...")
+    print("[3/3] 转写中...")
     text = transcribe(chunks)
 
     OUTPUT_DIR.mkdir(exist_ok=True)
@@ -409,6 +404,27 @@ def main():
     print(f"完成: {out_path}")
 
     cleanup(chunks, audio_path)
+
+
+def main():
+    raw = input("请输入 YouTube 视频链接（多个链接用、分隔）: ").strip()
+    if not raw:
+        print("未输入任何链接")
+        sys.exit(1)
+
+    urls = [u.strip() for u in raw.split("、") if u.strip()]
+    if not urls:
+        print("未解析到有效链接")
+        sys.exit(1)
+
+    total = len(urls)
+    for i, url in enumerate(urls, 1):
+        if total > 1:
+            print(f"\n===== 视频 {i}/{total} =====")
+        process_one(url)
+
+    if total > 1:
+        print(f"\n全部完成，共处理 {total} 个视频")
 
 
 if __name__ == "__main__":
